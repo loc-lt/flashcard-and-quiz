@@ -1,0 +1,14 @@
+delete
+---
+tags:
+  - sets
+parameters:
+  - in: path
+    name: set_id
+    required: true
+responses:
+  200:
+    description: Redirects to the original link
+
+  400:
+    description: not found

@@ -1,0 +1,77 @@
+-------------------Log----------------24/07/17-20:27:42
+Traceback (most recent call last):
+  File "C:\Users\Loc\Desktop\new\flashcard_quiz\user.py", line 71, in add_user
+    cursor.execute(query, (name, email, password, role, datetime.datetime.now(), datetime.datetime.now(), False))
+psycopg2.errors.InvalidTextRepresentation: invalid input syntax for type uuid: "Test User"
+LINE 1: INSERT INTO public."user" VALUES ('Test User', 'test@gmail.c...
+                                          ^
+
+ ---- add_user
+-------------------Log----------------24/07/17-20:28:56
+Traceback (most recent call last):
+  File "C:\Users\Loc\Desktop\new\flashcard_quiz\user.py", line 71, in add_user
+    cursor.execute(query, (name, email, password, role, datetime.datetime.now(), datetime.datetime.now(), False))
+psycopg2.errors.StringDataRightTruncation: value too long for type character varying(50)
+
+ ---- add_user
+-------------------Log----------------24/07/17-20:30:19
+Traceback (most recent call last):
+  File "C:\Users\Loc\Desktop\new\flashcard_quiz\user.py", line 72, in add_user
+    cursor.execute(query, (name, email, password, role, datetime.datetime.now(), datetime.datetime.now(), False))
+psycopg2.errors.StringDataRightTruncation: value too long for type character varying(50)
+
+ ---- add_user
+-------------------Log----------------24/07/17-20:33:17
+Traceback (most recent call last):
+  File "C:\Users\Loc\Desktop\new\flashcard_quiz\user.py", line 164, in login
+    cursor.execute(query, (email))
+TypeError: not all arguments converted during string formatting
+ ---- login
+-------------------Log----------------24/07/17-20:35:35
+Traceback (most recent call last):
+  File "C:\Users\Loc\Desktop\new\flashcard_quiz\user.py", line 187, in login
+    redis_client.set(hash_pw_role[0], token)
+    ^^^^^^^^^^^^^^^^
+AttributeError: module 'redis_client' has no attribute 'set'
+ ---- login
+-------------------Log----------------24/07/17-21:16:08
+Traceback (most recent call last):
+  File "C:\Users\Loc\Desktop\new\flashcard_quiz\user.py", line 184, in login
+    if not validate_email(email):
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\Desktop\new\flashcard_quiz\validators.py", line 6, in validate_email
+    return validators.email(email)
+           ^^^^^^^^^^^^^^^^
+AttributeError: module 'validators' has no attribute 'email'
+ ---- login
+-------------------Log----------------24/07/17-22:11:59
+Traceback (most recent call last):
+  File "C:\Users\Loc\Desktop\new\flashcard_quiz\auth_middleware.py", line 50, in decorated
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+TypeError: get_users_infor() missing 1 required positional argument: 'role'
+ ---- token_required
+-------------------Log----------------24/07/17-22:20:33
+Traceback (most recent call last):
+  File "C:\Users\Loc\Desktop\new\flashcard_quiz\user.py", line 184, in get_users_infor
+    if role < 100:
+       ^^^^
+NameError: name 'role' is not defined
+ ---- get_users_infor
+-------------------Log----------------24/07/17-23:22:18
+Traceback (most recent call last):
+  File "C:\Users\Loc\Desktop\new\flashcard_quiz\auth_middleware.py", line 41, in decorated
+    payload = jwt.decode(token, current_app.config['SECRET_KEY'],algorithms=["HS256"])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jwt.py", line 210, in decode
+    decoded = self.decode_complete(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jwt.py", line 151, in decode_complete
+    decoded = api_jws.decode_complete(
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jws.py", line 209, in decode_complete
+    self._verify_signature(signing_input, header, signature, key, algorithms)
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jws.py", line 310, in _verify_signature
+    raise InvalidSignatureError("Signature verification failed")
+jwt.exceptions.InvalidSignatureError: Signature verification failed
+ ---- token_required

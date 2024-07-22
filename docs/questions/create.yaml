@@ -1,0 +1,52 @@
+create
+---
+tags:
+  - questions
+parameters:
+  - name: body
+    description: The body should contain the insert data
+    in: body
+    required: true
+    schema:
+      type: object
+      required:
+        - "set_id"
+        - "content"
+        - "description"
+        - "list_answers"
+      properties:
+        set_id:
+          type: "set_id"
+          example: "xxxxxx"
+        content:
+          type: "content"
+          example: "xxxxxx"
+        type:
+          type: "type"
+          example: "xxxxxx"
+        list_answers:
+          type: "list_answers"
+          example: [
+            {
+              "content": "yyyyyy",
+              "is_correct": True/False
+            },
+            {
+              "content": "zzzzzz",
+              "is_correct": True/False
+            },
+            {
+              "content": "tttttt",
+              "is_correct": True/False
+            },
+            {
+              "content": "eeeeee",
+              "is_correct": True/False
+            }
+          ]
+responses:
+  201:
+    description: When a data insert success
+
+  400:
+    description: Fails to insert due to bad request data

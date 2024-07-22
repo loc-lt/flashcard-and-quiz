@@ -1,0 +1,27 @@
+update
+---
+tags:
+  - sets
+parameters:
+  - name: body
+    description: The body should contain the insert data
+    in: body
+    required: true
+    schema:
+      type: object
+      required:
+        - "set_id"
+        - "description"
+      properties:
+        set_id:
+          type: "set_id"
+          example: 'xxxxxx'
+        description:
+          type: "description"
+          example: 'xxxxxx'
+responses:
+  201:
+    description: When a data insert success
+
+  400:
+    description: Fails to insert due to bad request data

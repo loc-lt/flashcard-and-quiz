@@ -1,0 +1,35 @@
+create
+---
+tags:
+  - user
+parameters:
+  - name: body
+    description: The body should contain the insert data
+    in: body
+    required: true
+    schema:
+      type: object
+      required:
+        - "email"
+        - "name"
+        - "password"
+        - "role"
+      properties:
+        email:
+          type: "email"
+          example: 'xxxxxx'
+        name:
+          type: "name"
+          example: 'xxxxxx'
+        password:
+          type: "password"
+          example: 'xxxxxx'
+        role:
+          type: "role"
+          example: 'xxxxxx'
+responses:
+  201:
+    description: When a data insert success
+
+  400:
+    description: Fails to insert due to bad request data

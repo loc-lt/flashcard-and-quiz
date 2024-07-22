@@ -1,0 +1,192 @@
+-------------------Log----------------24/07/18-21:59:18
+Traceback (most recent call last):
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jws.py", line 257, in _load
+    signing_input, crypto_segment = jwt.rsplit(b".", 1)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: not enough values to unpack (expected 2, got 1)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Loc\Desktop\new\flashcard_quiz\users.py", line 306, in logout
+    decoded_token = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=["HS256"])
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jwt.py", line 210, in decode
+    decoded = self.decode_complete(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jwt.py", line 151, in decode_complete
+    decoded = api_jws.decode_complete(
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jws.py", line 198, in decode_complete
+    payload, signing_input, header, signature = self._load(jwt)
+                                                ^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jws.py", line 260, in _load
+    raise DecodeError("Not enough segments") from err
+jwt.exceptions.DecodeError: Not enough segments
+ ---- logout
+-------------------Log----------------24/07/18-22:00:51
+Traceback (most recent call last):
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jws.py", line 257, in _load
+    signing_input, crypto_segment = jwt.rsplit(b".", 1)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: not enough values to unpack (expected 2, got 1)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Loc\Desktop\new\flashcard_quiz\users.py", line 306, in logout
+    decoded_token = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=["HS256"])
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jwt.py", line 210, in decode
+    decoded = self.decode_complete(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jwt.py", line 151, in decode_complete
+    decoded = api_jws.decode_complete(
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jws.py", line 198, in decode_complete
+    payload, signing_input, header, signature = self._load(jwt)
+                                                ^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jws.py", line 260, in _load
+    raise DecodeError("Not enough segments") from err
+jwt.exceptions.DecodeError: Not enough segments
+ ---- logout
+-------------------Log----------------24/07/18-22:01:11
+Traceback (most recent call last):
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jws.py", line 263, in _load
+    header_data = base64url_decode(header_segment)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\utils.py", line 33, in base64url_decode
+    return base64.urlsafe_b64decode(input_bytes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\base64.py", line 134, in urlsafe_b64decode
+    return b64decode(s)
+           ^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\base64.py", line 88, in b64decode
+    return binascii.a2b_base64(s, strict_mode=validate)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+binascii.Error: Incorrect padding
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Loc\Desktop\new\flashcard_quiz\users.py", line 306, in logout
+    decoded_token = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=["HS256"])
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jwt.py", line 210, in decode
+    decoded = self.decode_complete(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jwt.py", line 151, in decode_complete
+    decoded = api_jws.decode_complete(
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jws.py", line 198, in decode_complete
+    payload, signing_input, header, signature = self._load(jwt)
+                                                ^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jws.py", line 265, in _load
+    raise DecodeError("Invalid header padding") from err
+jwt.exceptions.DecodeError: Invalid header padding
+ ---- logout
+-------------------Log----------------24/07/18-22:02:11
+Traceback (most recent call last):
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jws.py", line 263, in _load
+    header_data = base64url_decode(header_segment)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\utils.py", line 33, in base64url_decode
+    return base64.urlsafe_b64decode(input_bytes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\base64.py", line 134, in urlsafe_b64decode
+    return b64decode(s)
+           ^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\base64.py", line 88, in b64decode
+    return binascii.a2b_base64(s, strict_mode=validate)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+binascii.Error: Incorrect padding
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Loc\Desktop\new\flashcard_quiz\users.py", line 306, in logout
+    decoded_token = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=["HS256"])
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jwt.py", line 210, in decode
+    decoded = self.decode_complete(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jwt.py", line 151, in decode_complete
+    decoded = api_jws.decode_complete(
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jws.py", line 198, in decode_complete
+    payload, signing_input, header, signature = self._load(jwt)
+                                                ^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jws.py", line 265, in _load
+    raise DecodeError("Invalid header padding") from err
+jwt.exceptions.DecodeError: Invalid header padding
+ ---- logout
+-------------------Log----------------24/07/18-22:03:35
+Traceback (most recent call last):
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jws.py", line 263, in _load
+    header_data = base64url_decode(header_segment)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\utils.py", line 33, in base64url_decode
+    return base64.urlsafe_b64decode(input_bytes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\base64.py", line 134, in urlsafe_b64decode
+    return b64decode(s)
+           ^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\base64.py", line 88, in b64decode
+    return binascii.a2b_base64(s, strict_mode=validate)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+binascii.Error: Incorrect padding
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Loc\Desktop\new\flashcard_quiz\users.py", line 307, in logout
+    decoded_token = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=["HS256"])
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jwt.py", line 210, in decode
+    decoded = self.decode_complete(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jwt.py", line 151, in decode_complete
+    decoded = api_jws.decode_complete(
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jws.py", line 198, in decode_complete
+    payload, signing_input, header, signature = self._load(jwt)
+                                                ^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jws.py", line 265, in _load
+    raise DecodeError("Invalid header padding") from err
+jwt.exceptions.DecodeError: Invalid header padding
+ ---- logout
+-------------------Log----------------24/07/18-22:03:44
+Traceback (most recent call last):
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jws.py", line 263, in _load
+    header_data = base64url_decode(header_segment)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\utils.py", line 33, in base64url_decode
+    return base64.urlsafe_b64decode(input_bytes)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\base64.py", line 134, in urlsafe_b64decode
+    return b64decode(s)
+           ^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\base64.py", line 88, in b64decode
+    return binascii.a2b_base64(s, strict_mode=validate)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+binascii.Error: Incorrect padding
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Loc\Desktop\new\flashcard_quiz\users.py", line 307, in logout
+    decoded_token = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=["HS256"])
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jwt.py", line 210, in decode
+    decoded = self.decode_complete(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jwt.py", line 151, in decode_complete
+    decoded = api_jws.decode_complete(
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jws.py", line 198, in decode_complete
+    payload, signing_input, header, signature = self._load(jwt)
+                                                ^^^^^^^^^^^^^^^
+  File "C:\Users\Loc\AppData\Local\Programs\Python\Python312\Lib\site-packages\jwt\api_jws.py", line 265, in _load
+    raise DecodeError("Invalid header padding") from err
+jwt.exceptions.DecodeError: Invalid header padding
+ ---- logout

@@ -1,0 +1,10 @@
+logout
+---
+tags:
+  - user
+responses:
+  201:
+    description: When a data insert success
+
+  400:
+    description: Fails to insert due to bad request data

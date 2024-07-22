@@ -1,0 +1,25 @@
+-------------------Log----------------24/07/19-00:08:32
+Traceback (most recent call last):
+  File "C:\Users\Loc\Desktop\new\flashcard_quiz\sets.py", line 185, in delete_set
+    cursor.execute(query2, (user_id, set_id))
+psycopg2.errors.InvalidTextRepresentation: invalid input syntax for type uuid: "1"
+LINE 1: ...ser_id = 'beaf6900-c7a9-4121-a7d6-7a8f711e1f84' and id = '1'
+                                                                    ^
+
+ ---- delete_new_set
+-------------------Log----------------24/07/19-01:08:45
+Traceback (most recent call last):
+  File "C:\Users\Loc\Desktop\new\flashcard_quiz\questions.py", line 30, in create_question
+    set_id = request['set_id']
+             ~~~~~~~^^^^^^^^^^
+TypeError: 'Request' object is not subscriptable
+ ---- create_new_question
+-------------------Log----------------24/07/19-01:09:05
+Traceback (most recent call last):
+  File "C:\Users\Loc\Desktop\new\flashcard_quiz\questions.py", line 93, in create_question
+    cursor.execute(query3, (content, type, set_id, datetime.datetime.now(), datetime.datetime.now(), False))
+psycopg2.errors.UndefinedTable: relation "public.questions" does not exist
+LINE 1: insert into public.questions (content, type, set_id, created...
+                    ^
+
+ ---- create_new_question
