@@ -1,0 +1,60 @@
+update
+---
+tags:
+  - questions
+parameters:
+  - name: body
+    description: The body should contain the insert data
+    in: body
+    required: true
+    schema:
+      type: object
+      required:
+        - "set_id"
+        - "content"
+        - "type"
+        - "delete_answers"
+        - "add_answers"
+        - "update_answers"
+      properties:
+        content:
+          type: "content"
+          example: 'xxxxxx'
+        type:
+          type: "type"
+          example: 'xxxxxx'
+        delete_answers:
+          type: "delete_answers"
+          example: [uuid_1, uuid_2]
+        add_answers:
+          type: "add_answers"
+          example: [
+                      {
+                          "content": "New answer 1",
+                          "is_correct": true/false
+                      },
+                      {
+                          "content": "New answer 2",
+                          "is_correct": true/false
+                      }
+                    ]
+        update_answers:
+          type: "update_answers"
+          example: [
+                      {
+                          "id": uuid_3,
+                          "content": "Updated answer 3",
+                          "is_correct": true/false
+                      },
+                      {
+                          "id": uuid_4,
+                          "content": "Updated answer 4",
+                          "is_correct": true/false
+                      }
+                    ]
+responses:
+  201:
+    description: When a data insert success
+
+  400:
+    description: Fails to insert due to bad request data

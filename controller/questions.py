@@ -54,53 +54,12 @@ def create_question(user_id, set_id):
                     'message':'Invalid type of question!'
                 }
             return jsonify(ret), HTTP_400_BAD_REQUEST
-        
-        # Check if invalid answers with each question type
-        if type == 'Text_Fill':
-            if len(list_answers) != 1:
-                ret = {
-                        'status': False,
-                        'message':'Text file question has only a answer!'
-                    }
-                return jsonify(ret), HTTP_400_BAD_REQUEST
-            elif count_correct_answers(list_answers) != 1:
-                ret = {
-                        'status': False,
-                        'message':'Answer of text fill question must is correct!'
-                    }
-                return jsonify(ret), HTTP_400_BAD_REQUEST
-        elif type == 'Multiple_Choice':
-            if len(list_answers) < 2:
-                ret = {
-                        'status': False,
-                        'message':'Multiple choice question has more than a answer!'
-                    }
-                return jsonify(ret), HTTP_400_BAD_REQUEST
-            elif count_correct_answers(list_answers) != 1:     
-                ret = {
-                        'status': False,
-                        'message':'Multiple choice question has only a correct answer!'
-                    }
-                return jsonify(ret), HTTP_400_BAD_REQUEST
-        elif type == 'Checkboxes':
-            if len(list_answers) == count_correct_answers(list_answers):
-                ret = {
-                    'status': False,
-                    'message': "Amount of correct answers must less than amount of answers!"
-                }
-                return jsonify(ret), HTTP_400_BAD_REQUEST
-            elif len(list_answers) < 3:
-                ret = {
-                        'status': False,
-                        'message':'Checkboxes question has more than two answer!'
-                    }
-                return jsonify(ret), HTTP_400_BAD_REQUEST
-            elif count_correct_answers(list_answers) < 2:
-                ret = {
-                        'status': False,
-                        'message':'Checkboxes question has more than a correct answer!'
-                    }
-                return jsonify(ret), HTTP_400_BAD_REQUEST
+
+        # Validate question and answers
+        validation_error = validate_question_and_answers(type, list_answers)
+        if validation_error:
+            message, status_code = validation_error
+            return jsonify({'status': False, 'message': message}), status_code
         
         # Check if user is deleted
         query1 = sql.SQL('''select is_deleted from public."user" where id = %s''')
@@ -236,6 +195,108 @@ def delete_set(user_id, set_id, question_id):
         }
         Systemp_log(traceback.format_exc(), "delete_question").append_new_line()
         return jsonify(ret), HTTP_500_INTERNAL_SERVER_ERROR
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+@questions.put("/<question_id>")
+@swag_from("../docs/questions/update.yaml")
+@user_token_required
+@set_id_required
+def update_question(user_id, set_id, question_id):
+    try:
+        # Create connection
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Check if set_id or question_id is filled in or not
+        if not set_id or not question_id:
+            ret = {
+                    'status': False,
+                    'message':'Please fill in set_id and question_id!'
+                }
+            return jsonify(ret), HTTP_400_BAD_REQUEST 
+
+        # Check if set_id is uuid type or not
+        if not is_valid_uuid(set_id) or not is_valid_uuid(question_id):
+            ret = {
+                    'status': False,
+                    'message':'Type of set_id and question_id must is uuid!'
+                }
+            return jsonify(ret), HTTP_400_BAD_REQUEST  
+
+        # Check if user is deleted
+        query1 = sql.SQL('''select is_deleted from public."user" where id = %s''')
+        cursor.execute(query1, (user_id, ))
+        is_deleted = cursor.fetchone()
+
+        if not is_deleted:
+            ret = {
+                    'status': False,
+                    'message':'Owner of set has been deleted!'
+                }
+            return jsonify(ret), HTTP_400_BAD_REQUEST
+
+        # Get data from request
+        content = request.json['content']
+        question_type = request.json['type']
+        list_answers_to_delete = request.json['delete_answers']
+        list_answers_to_add = request.json['add_answers']
+        list_answers_to_update = request.json['update_answers']
+
+        # Validate question and answers
+        all_answers = list_answers_to_add + list_answers_to_update
+        validation_error = validate_question_and_answers(question_type, all_answers)
+        if validation_error:
+            message, status_code = validation_error
+            return jsonify({'status': False, 'message': message}), status_code
+
+        # Start transaction
+        cursor.execute('BEGIN')
+
+        # Delete answers
+        for answer_id in list_answers_to_delete:
+            cursor.execute(
+                '''update public.answer set is_deleted = %s where id = %s''',
+                (True, answer_id)
+            )
+
+        # Add new answers
+        for answer in list_answers_to_add:
+            cursor.execute(
+                '''insert into public.answer (content, is_correct, question_id, created_at, updated_at, is_deleted)
+                   values (%s, %s, %s, %s, %s, %s)''',
+                (answer['content'], answer['is_correct'], question_id, datetime.datetime.now(), datetime.datetime.now(), False)
+            )
+
+        # Update existing answers
+        for answer in list_answers_to_update:
+            cursor.execute(
+                '''update public.answer set content = %s, is_correct = %s, updated_at = %s 
+                   where id = %s and question_id = %s''',
+                (answer['content'], answer['is_correct'], datetime.datetime.now(), answer['id'], question_id)
+            )
+
+        # Update question content and type if needed
+        cursor.execute(
+            '''update public.question set content = %s, type = %s, updated_at = %s 
+               where id = %s and set_id = %s''',
+            (content, question_type, datetime.datetime.now(), question_id, set_id)
+        )
+
+        # Commit transaction
+        conn.commit()
+
+        # Return response
+        return jsonify({'status': True, 'message': 'Update question successfully!'}), HTTP_200_OK
+
+    except Exception as e:
+        if conn:
+            # Rollback if update failed
+            conn.rollback()
+        return jsonify({'status': False, 'message': str(e)}), HTTP_500_INTERNAL_SERVER_ERROR
     finally:
         if cursor:
             cursor.close()
