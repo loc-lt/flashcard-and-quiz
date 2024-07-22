@@ -7,7 +7,7 @@ from flasgger import swag_from
 from database import *
 from psycopg2 import sql
 from error_handle import *
-from auth_middleware import *
+from controller.auth_middleware import *
 import bcrypt
 import jwt
 import traceback
@@ -75,7 +75,7 @@ def add_user(email, password, name, role):
     
 # CREATE -> if create a user has already deleted?
 @users.post("")
-@swag_from("./docs/users/create.yaml")
+@swag_from("../docs/users/create.yaml")
 def create_user():
     try:
         # Get data from request
@@ -152,7 +152,7 @@ def create_user():
 
 # READ
 @users.get("")
-@swag_from("./docs/users/users_infor.yaml")
+@swag_from("../docs/users/users_infor.yaml")
 @token_required
 def get_users_infor():
     conn = None
@@ -207,7 +207,7 @@ def get_users_infor():
             conn.close()
 
 @users.post("/login")
-@swag_from("./docs/users/login.yaml")
+@swag_from("../docs/users/login.yaml")
 def login():
     conn = None
     cursor = None
@@ -295,7 +295,7 @@ def login():
 
 # Hàm logout
 @users.post("/logout")
-@swag_from("./docs/users/logout.yaml")
+@swag_from("../docs/users/logout.yaml")
 def logout():
     try:
         token = request.headers.get('Authorization')

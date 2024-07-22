@@ -7,9 +7,7 @@ from flasgger import swag_from
 from database import *
 from psycopg2 import sql
 from error_handle import *
-from auth_middleware import *
-import bcrypt
-import jwt
+from controller.auth_middleware import *
 import traceback
 import datetime
 from utils.validators import validate_email, validate_name, validate_integer, is_boolean, is_valid_uuid
@@ -19,7 +17,7 @@ sets = Blueprint("sets", __name__, url_prefix="/api/v1/sets")
 
 # CREATE
 @sets.post("")
-@swag_from("./docs/sets/create.yaml")
+@swag_from("../docs/sets/create.yaml")
 @user_token_required
 def create_set(user_id):
     try:
@@ -76,7 +74,7 @@ def create_set(user_id):
             conn.close()
 
 @sets.put("")
-@swag_from("./docs/sets/update.yaml")
+@swag_from("../docs/sets/update.yaml")
 @user_token_required
 def update_set(user_id):
     try:
@@ -161,7 +159,7 @@ def update_set(user_id):
             conn.close()
 
 @sets.delete("/<string:set_id>")
-@swag_from("./docs/sets/delete.yaml")
+@swag_from("../docs/sets/delete.yaml")
 @user_token_required
 def delete_set(set_id, user_id):
     try:

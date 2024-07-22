@@ -7,11 +7,10 @@ from flasgger import swag_from
 from database import *
 from psycopg2 import sql
 from error_handle import *
-from auth_middleware import *
-import bcrypt
-import jwt
+from controller.auth_middleware import *
 import traceback
 import datetime
+
 from utils.validators import validate_email, validate_name, validate_integer, is_boolean, is_valid_uuid, is_valid_question_type, count_correct_answers
 from utils.database import get_db_connection 
 
@@ -19,7 +18,7 @@ questions = Blueprint("questions", __name__, url_prefix="/api/v1/questions")
 
 # CREATE
 @questions.post("")
-@swag_from("./docs/questions/create.yaml")
+@swag_from("../docs/questions/create.yaml")
 @user_token_required
 @set_id_required
 def create_question(user_id, set_id):
@@ -169,7 +168,7 @@ def create_question(user_id, set_id):
             conn.close()
 
 @questions.delete("/<string:question_id>")
-@swag_from("./docs/questions/delete.yaml")
+@swag_from("../docs/questions/delete.yaml")
 @user_token_required
 @set_id_required
 def delete_set(user_id, set_id, question_id):

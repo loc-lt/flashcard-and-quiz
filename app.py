@@ -10,9 +10,9 @@ from database import *
 from werkzeug.exceptions import HTTPException
 from dotenv import load_dotenv
 
-from users import users
-from sets import sets
-from questions import questions
+from controller.users import users
+from controller.sets import sets
+from controller.questions import questions
 
 # Tải các biến môi trường từ file .env
 load_dotenv()

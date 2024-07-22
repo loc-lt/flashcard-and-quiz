@@ -3,11 +3,13 @@ from functools import wraps
 from flask import request
 from flask.json import jsonify
 from flask import current_app 
-from error_handle import *
 from fakeredis import FakeStrictRedis
 from constants.http_status_code import *
-from utils.database import *
 from psycopg2 import sql
+
+from error_handle import *
+
+from utils.database import *
 from utils.validators import *
 
 # Connect to redis server
