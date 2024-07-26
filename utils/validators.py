@@ -40,7 +40,7 @@ def is_valid_question_type(type):
 def count_correct_answers(list_answers):
     count = 0
     for answer in list_answers:
-        if answer['is_correct']:
+        if answer['is_correct'] in [True, "True"] :
             count += 1
     return count
 

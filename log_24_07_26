@@ -1,0 +1,21 @@
+-------------------Log----------------24/07/26-20:44:46
+Traceback (most recent call last):
+  File "c:\Users\Loc\Desktop\new\flashcard_quiz\controller\sets.py", line 257, in get_all_questions_of_set
+    if check_deleted[0]:
+      ~~~~~~~~~~~~~^^^
+TypeError: 'NoneType' object is not subscriptable
+ ---- get_all_questions_of_set
+-------------------Log----------------24/07/26-20:54:32
+Traceback (most recent call last):
+  File "c:\Users\Loc\Desktop\new\flashcard_quiz\controller\sets.py", line 304, in get_all_questions_of_set
+    ret['data']['description'] = questions_answers[0][0]
+                                 ~~~~~~~~~~~~~~~~~^^^
+IndexError: list index out of range
+ ---- get_all_questions_of_set
+-------------------Log----------------24/07/26-20:54:54
+Traceback (most recent call last):
+  File "c:\Users\Loc\Desktop\new\flashcard_quiz\controller\sets.py", line 304, in get_all_questions_of_set
+    ret['data']['description'] = questions_answers[0][0]
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^
+TypeError: list indices must be integers or slices, not str
+ ---- get_all_questions_of_set
