@@ -302,3 +302,104 @@ def update_question(user_id, set_id, question_id):
             cursor.close()
         if conn:
             conn.close()
+
+# READ
+@questions.get("/<string:question_id>")
+@swag_from("../docs/questions/all_answers.yaml")
+@user_token_required
+@set_id_required
+def get_all_questions_of_set(user_id, set_id, question_id):
+    try:
+        # Create connection
+        conn = get_db_connection()
+        cursor = conn.cursor()  
+
+        # Check if set_id is uuid type or not
+        if not is_valid_uuid(question_id):
+            ret = {
+                    'status': False,
+                    'message':'Type of question_id must is uuid!'
+                }
+            return jsonify(ret), HTTP_400_BAD_REQUEST  
+        
+        # Check if user is deleted
+        query = sql.SQL('''select is_deleted from public."user" where id = %s''')
+        cursor.execute(query, (user_id, ))
+        is_deleted = cursor.fetchone()
+
+        if not is_deleted:
+            ret = {
+                    'status': False,
+                    'message':'Owner of questions has been deleted!'
+                }
+            return jsonify(ret), HTTP_400_BAD_REQUEST
+        
+        # Check if set is not exist or is deleted 
+        query1 = sql.SQL('''select is_deleted from public.question where id = %s''')
+        cursor.execute(query1, (question_id, ))
+
+        check_deleted = cursor.fetchone()
+
+        if check_deleted is None:
+            ret = {
+                'status':False,
+                'message':'This question is not exist!'
+            }
+            return jsonify(ret), HTTP_400_BAD_REQUEST
+        
+        if check_deleted[0]: 
+            ret = {
+                'status':False,
+                'message':'This questions has been deleted!'
+            }
+            return jsonify(ret), HTTP_400_BAD_REQUEST
+        
+        # Check if user isn't owner of this question
+        query2 = sql.SQL('''select * from public.question where set_id = %s and id = %s''')
+        cursor.execute(query2, (set_id, question_id))
+
+        check_owner = cursor.fetchone()
+        if check_owner is not None and len(check_owner) == 0:
+            ret = {
+                    'status': False,
+                    'message':'Sorry, permission denied!'
+                }
+            return jsonify(ret), HTTP_403_FORBIDDEN
+        
+        ret = {
+                'status': True,
+                'message':'Get all answers successfully!',
+                'data': {}
+            }
+            
+        # Get all questions and answers
+        query3 = sql.SQL('''select a.content, b.content, b.is_correct  
+                         from public.question a
+                         join public.answer b 
+                         on a.id = b.question_id and b.question_id = %s and b.is_deleted != true
+                         ''')
+        
+        cursor.execute(query3, (question_id, ))
+        questions_answers = cursor.fetchall()
+
+        # Get content of question and its answers
+        ret['data']['question_content'] = questions_answers[0][0]
+        ret['data']['answers'] = []
+
+        # Get all answers
+        for item in questions_answers:
+            ret['data']['answers'].append({'answer_content': item[1], 'is_correct': item[2]})
+
+        return jsonify(ret), HTTP_200_OK
+    except Exception as e:
+        ret = {
+            'status': False,
+            'message': str(e)
+        }
+        Systemp_log(traceback.format_exc(), "get_all_answers_of_question").append_new_line()
+        return jsonify(ret), HTTP_500_INTERNAL_SERVER_ERROR
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
