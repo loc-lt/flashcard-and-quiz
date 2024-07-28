@@ -1,0 +1,47 @@
+search
+---
+tags:
+  - sets
+parameters:
+  - name: body
+    description: The body should contain the insert data
+    in: body
+    required: true
+    schema:
+      type: object
+      required:
+        - "set_id"
+        - "page"
+        - "page_size"
+        - "keyword"
+        - "question_type"
+        - "sort_by"
+        - "sort_direction"
+      properties:
+        set_id:
+          type: "set_id"
+          example: 'xxxxxx'
+        page:
+          type: "page"
+          example: 'xxxxxx'
+        page_size:
+          type: "page_size"
+          example: 'xxxxxx'
+        keyword:
+          type: "keyword"
+          example: 'xxxxxx'
+        question_type:
+          type: "question_type"
+          example: 'xxxxxx'
+        sort_by:
+          type: "sort_by"
+          example: 'xxxxxx'
+        sort_direction:
+          type: "sort_direction"
+          example: 'xxxxxx'
+responses:
+  201:
+    description: When a data insert success
+
+  400:
+    description: Fails to insert due to bad request data

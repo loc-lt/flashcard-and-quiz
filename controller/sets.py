@@ -338,3 +338,148 @@ def get_all_questions_of_set(user_id, set_id):
             cursor.close()
         if conn:
             conn.close()
+
+# SEARCH
+@sets.post("/search")
+@swag_from("../docs/sets/search.yaml")
+@user_token_required
+@set_id_required
+def search(user_id, set_id):
+    try:
+        # Create connection
+        conn = get_db_connection()
+        cursor = conn.cursor()  
+
+        # Check if set_id is uuid type or not
+        if not is_valid_uuid(set_id):
+            ret = {
+                'status': False,
+                'message': 'Type of set_id must be uuid!'
+            }
+            return jsonify(ret), 400  
+        
+        # Check if set is not exist or is deleted 
+        query1 = sql.SQL('''SELECT is_deleted FROM public.set WHERE id = %s''')
+        cursor.execute(query1, (set_id, ))
+
+        check_deleted = cursor.fetchone()
+
+        if check_deleted is None:
+            ret = {
+                'status': False,
+                'message': 'This set does not exist!'
+            }
+            return jsonify(ret), 400
+        
+        if check_deleted[0]: 
+            ret = {
+                'status': False,
+                'message': 'This set has been deleted!'
+            }
+            return jsonify(ret), 400
+        
+        # Check if user isn't owner of this set
+        query2 = sql.SQL('''SELECT * FROM public.set WHERE user_id = %s AND id = %s''')
+        cursor.execute(query2, (user_id, set_id))
+
+        check_owner = cursor.fetchone()
+        if check_owner is None:
+            ret = {
+                'status': False,
+                'message': 'Sorry, permission denied!'
+            }
+            return jsonify(ret), 403
+        
+        # Pagination and Filtering
+        page = request.json['page']
+        page_size = request.json['page_size']
+        keyword = request.json['keyword']
+        question_type = request.json['question_type']
+        sort_by = request.json['sort_by']
+        sort_direction = request.json['sort_direction']
+
+        offset = (page - 1) * page_size # example: page = 2, page_size = 50 -> offset = (2 - 1)*50 = 50 -> get records from 51 -> 100
+        
+        # Chú ý: số lượng phần tử có chứa %s (format string) phải bằng độ dài list query_params,
+        # sau này sẽ dùng từng phần tử trong query_params để map tới từng format string để add vào query tổng
+        query_params = [set_id]
+        filters = ["b.set_id = %s", "b.is_deleted != true", "c.is_deleted != true"]
+
+        # Kiểm tra xem điều kiện search có keyword không, nếu có thì thêm vào cả filters và query_params
+        if keyword:
+            filters.append("(b.content ILIKE %s OR c.content ILIKE %s)")
+            query_params.append(f"%{keyword}%") # map vào %s đầu tiên trong (b.content ILIKE %s OR c.content ILIKE %s)
+            query_params.append(f"%{keyword}%") # map vào %s thứ hai trong (b.content ILIKE %s OR c.content ILIKE %s)
+        
+        # Kiểm tra xem điều kiện search có question không, nếu có thì thêm vào cả filters và query_params
+        if question_type:
+            filters.append("b.type = %s")
+            query_params.append(question_type)
+        
+        sort_column = sql.Identifier(sort_by)
+        sort_order = sql.SQL('ASC') if sort_direction == 'asc' else sql.SQL('DESC')
+
+        query3 = sql.SQL('''SELECT a.description, b.content AS question_content, c.content AS answer_content, c.is_correct  
+                            FROM public.set a 
+                            JOIN public.question b ON a.id = b.set_id
+                            JOIN public.answer c ON b.id = c.question_id
+                            WHERE {} 
+                            ORDER BY {} {}
+                            LIMIT %s OFFSET %s''').format(
+            sql.SQL(' AND ').join(map(sql.SQL, filters)),
+            sort_column,
+            sort_order
+        )
+
+        query_params.extend([page_size, offset])
+
+        cursor.execute(query3, query_params)
+        questions_answers = cursor.fetchall()
+
+        ret = {
+            'status': True,
+            'message': 'Get all questions and answers successfully!',
+            'data': {}
+        }
+
+        if questions_answers:
+            # Get set's description
+            ret['data']['description'] = questions_answers[0][0]
+
+            # Initialize list of question
+            ret['data']['questions'] = []
+
+            # Get all questions and answers
+            question_content = ''
+            answers_infors = []
+
+            for idx, item in enumerate(questions_answers):
+                if question_content == '':
+                    question_content = item[1]
+                    answers_infors.append({'answer_content': item[2], 'is_correct': item[3]})
+                elif item[1] != question_content:
+                    ret['data']['questions'].append({'question_content': question_content, 'answers': answers_infors})
+                    answers_infors = [{'answer_content': item[2], 'is_correct': item[3]}]
+                    question_content = item[1]
+                else:
+                    answers_infors.append({'answer_content': item[2], 'is_correct': item[3]})
+
+                if idx == len(questions_answers) - 1:
+                    ret['data']['questions'].append({'question_content': question_content, 'answers': answers_infors})
+        else:
+            ret['data']['description'] = ''
+            ret['data']['questions'] = []
+
+        return jsonify(ret), 200
+    except Exception as e:
+        ret = {
+            'status': False,
+            'message': str(e)
+        }
+        traceback.print_exc()  # Log lỗi ra console để debug
+        return jsonify(ret), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
