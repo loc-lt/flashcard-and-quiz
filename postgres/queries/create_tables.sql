@@ -40,3 +40,30 @@ create table answer (
 	updated_at TIMESTAMP,
 	is_deleted BOOLEAN
 );
+
+create table quiz (
+	id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+	created_at TIMESTAMP,				
+	updated_at TIMESTAMP,
+	is_deleted BOOLEAN,
+	user_id UUID REFERENCES "user" (id),
+	set_id UUID REFERENCES "set" (id),
+	public_or_not BOOLEAN
+);
+
+create table quiz_question(
+    user_id UUID NOT NULL,
+    set_id UUID NOT NULL,
+    PRIMARY KEY (user_id, set_id),
+    FOREIGN KEY (user_id) REFERENCES "user" (id),
+    FOREIGN KEY (set_id) REFERENCES "set" (id)
+);
+
+create table quiz_question_answer(
+    user_id UUID NOT NULL,
+    set_id UUID NOT NULL,
+    PRIMARY KEY (user_id, set_id),
+    FOREIGN KEY (user_id) REFERENCES "user" (id),
+    FOREIGN KEY (set_id) REFERENCES "set" (id),
+	json_question_answer JSONB
+);
