@@ -1,7 +1,7 @@
 logout
 ---
 tags:
-  - user
+  - users
 responses:
   201:
     description: When a data insert success

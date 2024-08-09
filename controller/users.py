@@ -74,7 +74,7 @@ def add_user(email, password, name, role):
             conn.close()
     
 # CREATE -> if create a user has already deleted?
-@users.post("")
+@users.post("/register")
 @swag_from("../docs/users/create.yaml")
 def create_user():
     try:
@@ -117,7 +117,7 @@ def create_user():
         if check_exist(email):
             ret = {
                     'status': False,
-                    'message':'This email already registered!'
+                    'message':'This email has already registered!'
                 }
             return jsonify(ret), HTTP_400_BAD_REQUEST
 

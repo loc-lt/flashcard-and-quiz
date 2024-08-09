@@ -1,7 +1,7 @@
-create
+register
 ---
 tags:
-  - user
+  - users
 parameters:
   - name: body
     description: The body should contain the insert data
