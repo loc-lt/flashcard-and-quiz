@@ -24,16 +24,19 @@ def create_set(user_id):
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Get data from request
-        description = request.json['description']
-
-        # Check if the description is filled in or not
-        if not description:
+        # Get name from request (required)
+        if 'name' not in request.json:
             ret = {
                     'status': False,
-                    'message':'Please fill in description!'
+                    'message':'Please fill out name field!'
                 }
-            return jsonify(ret), HTTP_400_BAD_REQUEST
+            return jsonify(ret), HTTP_400_BAD_REQUEST  
+        name = request.json['name']
+
+        # Get description from request (optional)
+        description = None
+        if 'description' in request.json:
+            description = request.json['description']
         
         # Check if user is deleted
         query1 = sql.SQL('''select is_deleted from public."user" where id = %s''')
@@ -43,14 +46,14 @@ def create_set(user_id):
         if not is_deleted:
             ret = {
                     'status': False,
-                    'message':'This user has been deleted!'
+                    'message':'Set owner has been deleted!'
                 }
             return jsonify(ret), HTTP_400_BAD_REQUEST
 
         # Save new set
-        query2 = sql.SQL('''insert into public.set (user_id, created_at, updated_at, is_deleted, public_or_not, description) 
-                        values (%s, %s, %s, %s, %s, %s)''')
-        cursor.execute(query2, (user_id, datetime.datetime.now(), datetime.datetime.now(), False, False, description))
+        query2 = sql.SQL('''insert into public.set (user_id, created_at, updated_at, is_deleted, public_or_not, name, description) 
+                        values (%s, %s, %s, %s, %s, %s, %s) return id;''')
+        cursor.execute(query2, (user_id, datetime.datetime.now(), datetime.datetime.now(), False, False, name, description))
         conn.commit()
 
         # Return response

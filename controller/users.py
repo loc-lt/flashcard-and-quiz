@@ -135,7 +135,7 @@ def create_user():
                     'status': True,
                     'message':'Register new account successfully!'
                 }
-            return jsonify(ret), HTTP_200_OK
+            return jsonify(ret), HTTP_201_CREATED
         
         ret = {
                 'status': False,

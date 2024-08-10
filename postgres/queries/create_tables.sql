@@ -18,6 +18,7 @@ create table "set" (
 	updated_at TIMESTAMP,
 	is_deleted BOOLEAN,
 	public_or_not BOOLEAN,
+	name VARCHAR(100),
 	description VARCHAR(200)
 );
 
