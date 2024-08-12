@@ -54,15 +54,17 @@ def create_set(user_id):
         query2 = sql.SQL('''insert into public.set (user_id, created_at, updated_at, is_deleted, public_or_not, name, description) 
                         values (%s, %s, %s, %s, %s, %s, %s) return id;''')
         cursor.execute(query2, (user_id, datetime.datetime.now(), datetime.datetime.now(), False, False, name, description))
+        return_id = cursor.fetchone()
         conn.commit()
 
         # Return response
         ret = {
                 'status': True,
-                'message':'Create new set successfully!'
+                'message':'Create new set successfully!',
+                'id': return_id[0]
             }
         
-        return jsonify(ret), HTTP_200_OK
+        return jsonify(ret), HTTP_201_CREATED
     except Exception as e:
         ret = {
             'status': False,
@@ -76,25 +78,31 @@ def create_set(user_id):
         if conn:
             conn.close()
 
-@sets.put("")
+@sets.put("/<string:set_id>")
 @swag_from("../docs/sets/update.yaml")
 @user_token_required
-def update_set(user_id):
+def update_set(user_id, set_id = None):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Get data from request
-        set_id = request.json['set_id']
-        description = request.json['description']
+        # Get name from request
+        name = None
+        if name in request.json:
+            name = request.json['name']
+        
+        # Get description from request
+        description = None
+        if description in request.json:
+            description = request.json['description']
 
         # Check if set_id is filled in or not
-        if not set_id:
+        if set_id is None:
             ret = {
                     'status': False,
-                    'message':'Please fill in set_id!'
+                    'message':'Set ID is required!'
                 }
-            return jsonify(ret), HTTP_400_BAD_REQUEST
+            return jsonify(ret), HTTP_400_BAD_REQUEST 
         
         # Check if set_id is uuid type or not
         if not is_valid_uuid(set_id):
@@ -102,31 +110,35 @@ def update_set(user_id):
                     'status': False,
                     'message':'Type of set_id must is uuid!'
                 }
-            return jsonify(ret), HTTP_400_BAD_REQUEST
-        
-        # Check if the description is empty
-        if len(description) == 0:
-            ret = {
-                    'status': False,
-                    'message':'Please fill in description!'
-                }
-            return jsonify(ret), HTTP_400_BAD_REQUEST     
+            return jsonify(ret), HTTP_400_BAD_REQUEST 
 
         # Check if user is deleted
         query1 = sql.SQL('''select is_deleted from public."user" where id = %s''')
         cursor.execute(query1, (user_id, ))
         
-        is_deleted = cursor.fetchone()
-        if not is_deleted:
+        user_deleted = cursor.fetchone()
+        if not user_deleted[0]:
             ret = {
                     'status': False,
-                    'message':'Owner of set has been deleted!'
+                    'message':'Set owner has been deleted!'
                 }
             return jsonify(ret), HTTP_400_BAD_REQUEST
         
+        # Check if set is deleted
+        query2 = sql.SQL('''select is_deleted from public.set where id = %s''')
+        cursor.execute(query2, (set_id, ))
+
+        set_deleted = cursor.fetchone()
+        if not set_deleted[0]:
+            ret = {
+                'status': False,
+                'message': 'This set has been deleted!'
+            }
+            return jsonify(ret), HTTP_400_BAD_REQUEST
+
         # Check if user isn't owner of this set
-        query2 = sql.SQL('''select * from public.set where user_id = %s and id = %s''')
-        cursor.execute(query2, (user_id, set_id))
+        query3 = sql.SQL('''select * from public.set where user_id = %s and id = %s''')
+        cursor.execute(query3, (user_id, set_id))
 
         check_owner = cursor.fetchone()
         if check_owner is not None and len(check_owner) == 0:
@@ -137,15 +149,21 @@ def update_set(user_id):
             return jsonify(ret), HTTP_403_FORBIDDEN
         
         # Update set information
-        query3 = sql.SQL('''update public.set set description = %s, updated_at = %s where id = %s''')
-        cursor.execute(query3, (description, datetime.datetime.now(), set_id))
+        query4 = sql.SQL('''update public.set set name = %s, description = %s, updated_at = %s where id = %s returning id, name, description;''')
+        cursor.execute(query4, (name, description, datetime.datetime.now(), set_id))
+        updated_infors = cursor.fetchone()
         conn.commit()
 
         # Return response
         ret = {
                 'status': True,
-                'message':'Update set successfully!'
-            }
+                'message':'Update set successfully!',
+                'updated_set': {
+                    'id': updated_infors[0],
+                    'name': updated_infors[1],
+                    'description': updated_infors[2]
+                }
+            }   
         
         return jsonify(ret), HTTP_200_OK
     except Exception as e:
@@ -164,16 +182,16 @@ def update_set(user_id):
 @sets.delete("/<string:set_id>")
 @swag_from("../docs/sets/delete.yaml")
 @user_token_required
-def delete_set(set_id, user_id):
+def delete_set(user_id, set_id = None):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
 
         # Check if set_id is filled in or not
-        if not set_id:
+        if set_id is None:
             ret = {
                     'status': False,
-                    'message':'Please fill in set_id!'
+                    'message':'Set ID is required!'
                 }
             return jsonify(ret), HTTP_400_BAD_REQUEST 
 
@@ -193,7 +211,7 @@ def delete_set(set_id, user_id):
         if not is_deleted:
             ret = {
                     'status': False,
-                    'message':'Owner of set has been deleted!'
+                    'message':'Set owner has been deleted!'
                 }
             return jsonify(ret), HTTP_400_BAD_REQUEST
         
@@ -220,7 +238,7 @@ def delete_set(set_id, user_id):
                 'message':'Delete set successfully!'
             }
         
-        return jsonify(ret), HTTP_200_OK
+        return jsonify(ret), HTTP_204_NO_CONTENT
     except Exception as e:
         ret = {
             'status': False,
@@ -238,95 +256,164 @@ def delete_set(set_id, user_id):
 @sets.get("/<string:set_id>")
 @swag_from("../docs/sets/all_questions.yaml")
 @user_token_required
-def get_all_questions_of_set(user_id, set_id):
+def get_all_questions_of_set(user_id, set_id = None):
     try:
         # Create connection
         conn = get_db_connection()
         cursor = conn.cursor()  
 
-        # Check if set_id is uuid type or not
-        if not is_valid_uuid(set_id):
-            ret = {
-                    'status': False,
-                    'message':'Type of set_id must is uuid!'
+        # Check if get one set or all sets
+        one_or_all = "one"
+        if set_id is None:
+            one_or_all = "all"
+        
+        # Initialize questions_answers includes all questions and its answers and ret to send response to client
+        questions_answers = None
+        ret = {}
+
+        # Check if set_id is uuid type or not (one case)
+        if one_or_all == "one":
+            if not is_valid_uuid(set_id):
+                ret = {
+                        'status': False,
+                        'message':'Type of set_id must is uuid!'
+                    }
+                return jsonify(ret), HTTP_400_BAD_REQUEST  
+        
+            # Check if set is not exist or is deleted 
+            query1 = sql.SQL('''select is_deleted from public.set where id = %s''')
+            cursor.execute(query1, (set_id, ))
+
+            check_deleted = cursor.fetchone()
+
+            if check_deleted is None:
+                ret = {
+                    'status':False,
+                    'message':'This set is not exist!'
                 }
-            return jsonify(ret), HTTP_400_BAD_REQUEST  
-        
-        # Check if set is not exist or is deleted 
-        query1 = sql.SQL('''select is_deleted from public.set where id = %s''')
-        cursor.execute(query1, (set_id, ))
-
-        check_deleted = cursor.fetchone()
-
-        if check_deleted is None:
-            ret = {
-                'status':False,
-                'message':'This set is not exist!'
-            }
-            return jsonify(ret), HTTP_400_BAD_REQUEST
-        
-        if check_deleted[0]: 
-            ret = {
-                'status':False,
-                'message':'This set has been deleted!'
-            }
-            return jsonify(ret), HTTP_400_BAD_REQUEST
-        
-        # Check if user isn't owner of this set
-        query2 = sql.SQL('''select * from public.set where user_id = %s and id = %s''')
-        cursor.execute(query2, (user_id, set_id))
-
-        check_owner = cursor.fetchone()
-        if check_owner is not None and len(check_owner) == 0:
-            ret = {
-                    'status': False,
-                    'message':'Sorry, permission denied!'
-                }
-            return jsonify(ret), HTTP_403_FORBIDDEN
-        
-        ret = {
-                'status': True,
-                'message':'Get all questions and answers successfully!',
-                'data': {}
-            }
+                return jsonify(ret), HTTP_400_BAD_REQUEST
             
-        # Get all questions and answers
-        query3 = sql.SQL('''select a.description, b.content, c.content, c.is_correct  
-                         from public.set a 
-                         join public.question b 
-                         on a.id = b.set_id and b.set_id = %s and b.is_deleted != true
-                         join public.answer c
-                         on b.id = c.question_id and c.is_deleted != true
-                         ''')
+            if check_deleted[0]: 
+                ret = {
+                    'status':False,
+                    'message':'This set has been deleted!'
+                }
+                return jsonify(ret), HTTP_400_BAD_REQUEST
         
-        cursor.execute(query3, (set_id, ))
-        questions_answers = cursor.fetchall()
+            # Check if user isn't owner of this set
+            query2 = sql.SQL('''select * from public.set where user_id = %s and id = %s''')
+            cursor.execute(query2, (user_id, set_id))
 
-        # Get set's description
-        ret['data']['description'] = questions_answers[0][0]
+            check_owner = cursor.fetchone()
+            if check_owner is not None and len(check_owner) == 0:
+                ret = {
+                        'status': False,
+                        'message':'Sorry, permission denied!'
+                    }
+                return jsonify(ret), HTTP_403_FORBIDDEN
+            
+            # Get all questions and answers
+            query3 = sql.SQL('''select a.name, a.description, b.content, c.content, c.is_correct  
+                            from public.set a 
+                            join public.question b 
+                            on a.id = b.set_id and b.set_id = %s and b.is_deleted != true
+                            join public.answer c
+                            on b.id = c.question_id and c.is_deleted != true
+                            ''')
+            
+            cursor.execute(query3, (set_id, ))
+            questions_answers = cursor.fetchall()
 
-        # Initialize list of question
-        ret['data']['questions'] = []
+            # Initialize ret if get questions_answers from database successfully
+            ret = {
+                    'status': True,
+                    'message':'Get all questions and answers successfully!',
+                    'data': {}
+                }
+            
+            # Get set name 
+            ret['data']['name'] = questions_answers[0][0]
 
-        # Get all questions and answers
-        question_content = ''
-        answers_infors = []
+            # Get set description
+            ret['data']['description'] = questions_answers[0][1]
 
-        print(len(questions_answers))
+            # Initialize list of question
+            ret['data']['questions'] = []
 
-        for idx, item in enumerate(questions_answers):
-            if question_content == '':
-                question_content = item[1]
-                answers_infors.append({'answer_content': item[2], 'is_correct': item[3]})
-            elif item[1] != question_content:
-                ret['data']['questions'].append({'question_content': question_content, 'answers': answers_infors})
-                answers_infors = [{'question_content': item[2], 'is_correct': item[3]}]
-                question_content = item[1]
-            else:
-                answers_infors.append({'answer_content': item[2], 'is_correct': item[3]})
+            # Get all questions and answers
+            question_content = ''
+            answers_infors = []
 
-            if idx == len(questions_answers) - 1:
-                ret['data']['questions'].append({'question_content': question_content, 'answers': answers_infors})
+            for idx, item in enumerate(questions_answers):
+                if question_content == '':
+                    question_content = item[2]
+                    answers_infors.append({'answer_content': item[3], 'is_correct': item[4]})
+                elif item[1] != question_content:
+                    ret['data']['questions'].append({'question_content': question_content, 'answers': answers_infors})
+                    answers_infors = [{'question_content': item[3], 'is_correct': item[4]}]
+                    question_content = item[1]
+                else:
+                    answers_infors.append({'answer_content': item[3], 'is_correct': item[4]})
+
+                if idx == len(questions_answers) - 1:
+                    ret['data']['questions'].append({'question_content': question_content, 'answers': answers_infors})
+        else:
+            # Query to get all set name
+            query4 = sql.SQL('''select distinct(id) from public."set"''')
+            cursor.execute(query4)
+            id_return = cursor.fetchall()
+            set_ids = [name[0] for name in id_return]
+
+            # Initialize ret if get questions_answers from database successfully
+            ret = {
+                    'status': True,
+                    'message':'Get all questions and answers successfully!',
+                    'data': []
+                }
+            
+            for temp_id in set_ids:
+                # Get all questions and answers
+                query5 = sql.SQL('''select a.name, a.description, b.content, c.content, c.is_correct  
+                            from public.set a 
+                            join public.question b 
+                            on a.id = b.set_id and b.set_id = %s and b.is_deleted != true
+                            join public.answer c
+                            on b.id = c.question_id and c.is_deleted != true
+                            ''')
+            
+                cursor.execute(query5, (temp_id, ))
+                questions_answers = cursor.fetchall()
+
+                set_dict = {}
+
+                # Get set name 
+                set_dict['name'] = questions_answers[0][0]
+
+                # Get set description
+                set_dict['description'] = questions_answers[0][1]
+
+                # Initialize list of question
+                set_dict['questions'] = []
+
+                # Get all questions and answers
+                question_content = ''
+                answers_infors = []
+
+                for idx, item in enumerate(questions_answers):
+                    if question_content == '':
+                        question_content = item[2]
+                        answers_infors.append({'answer_content': item[3], 'is_correct': item[4]})
+                    elif item[1] != question_content:
+                        set_dict['questions'].append({'question_content': question_content, 'answers': answers_infors})
+                        answers_infors = [{'question_content': item[3], 'is_correct': item[4]}]
+                        question_content = item[2]
+                    else:
+                        answers_infors.append({'answer_content': item[3], 'is_correct': item[4]})
+
+                    if idx == len(questions_answers) - 1:
+                        set_dict['questions'].append({'question_content': question_content, 'answers': answers_infors})
+
+                ret['data'].append(set_dict)
 
         return jsonify(ret), HTTP_200_OK
     except Exception as e:
