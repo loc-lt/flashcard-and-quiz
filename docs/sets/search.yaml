@@ -3,42 +3,55 @@ search
 tags:
   - sets
 parameters:
-  - name: body
-    description: The body should contain the insert data
-    in: body
+  - name: id
+    in: query
+    description: UUID v4 of the set to search within
     required: true
     schema:
-      type: object
-      required:
-        - "set_id"
-        - "page"
-        - "page_size"
-        - "keyword"
-        - "question_type"
-        - "sort_by"
-        - "sort_direction"
-      properties:
-        set_id:
-          type: "set_id"
-          example: 'xxxxxx'
-        page:
-          type: "page"
-          example: 'xxxxxx'
-        page_size:
-          type: "page_size"
-          example: 'xxxxxx'
-        keyword:
-          type: "keyword"
-          example: 'xxxxxx'
-        question_type:
-          type: "question_type"
-          example: 'xxxxxx'
-        sort_by:
-          type: "sort_by"
-          example: 'xxxxxx'
-        sort_direction:
-          type: "sort_direction"
-          example: 'xxxxxx'
+      type: string
+      format: uuid
+  - name: keyword
+    in: query
+    description: Search keyword for filtering questions and answers
+    required: false
+    schema:
+      type: string
+  - name: question_type
+    in: query
+    description: Filter questions by their type (e.g., multiple choice, fill in the blank)
+    required: false
+    schema:
+      type: string
+  - name: sort_by
+    in: query
+    description: The field to sort the results by (e.g., created_at, updated_at)
+    required: false
+    schema:
+      type: string
+      enum: [created_at, updated_at, name]
+      default: created_at
+  - name: sort_direction
+    in: query
+    description: The direction to sort results (asc for ascending, desc for descending)
+    required: false
+    schema:
+      type: string
+      enum: [asc, desc]
+      default: asc
+  - name: page
+    in: query
+    description: The page number to return
+    required: false
+    schema:
+      type: integer
+      default: 1
+  - name: page_size
+    in: query
+    description: The number of results to return per page
+    required: false
+    schema:
+      type: integer
+      default: 50
 responses:
   201:
     description: When a data insert success

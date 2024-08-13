@@ -458,23 +458,25 @@ def get_all_questions_of_all_sets(user_id):
             conn.close()
 
 # SEARCH
-@sets.post("/search")
+@sets.get("/search")
 @swag_from("../docs/sets/search.yaml")
 @user_token_required
-@set_id_required
-def search(user_id, set_id):
+def search(user_id):
     try:
+        # Get set_id from query parameters
+        set_id = request.args.get('id')
+
+        # Check if set_id is provided and is valid UUID v4
+        if not set_id or not is_valid_uuid(set_id):
+            ret = {
+                'status': False,
+                'message': 'Invalid or missing id parameter. Must be a valid UUID v4!'
+            }
+            return jsonify(ret), HTTP_400_BAD_REQUEST
+        
         # Create connection
         conn = get_db_connection()
         cursor = conn.cursor()  
-
-        # Check if set_id is uuid type or not
-        if not is_valid_uuid(set_id):
-            ret = {
-                'status': False,
-                'message': 'Type of set_id must be uuid!'
-            }
-            return jsonify(ret), HTTP_400_BAD_REQUEST  
         
         # Check if set is not exist or is deleted 
         query1 = sql.SQL('''SELECT is_deleted FROM public.set WHERE id = %s''')
@@ -509,12 +511,12 @@ def search(user_id, set_id):
             return jsonify(ret), HTTP_403_FORBIDDEN
         
         # Pagination and Filtering
-        page = request.json['page']
-        page_size = request.json['page_size']
-        keyword = request.json['keyword']
-        question_type = request.json['question_type']
-        sort_by = request.json['sort_by']
-        sort_direction = request.json['sort_direction']
+        page = request.args.get('page', default=1, type=int)
+        page_size = request.args.get('page_size', default=50, type=int)
+        keyword = request.args.get('keyword', default='', type=str)
+        question_type = request.args.get('question_type', default='', type=str)
+        sort_by = request.args.get('sort_by', default='created_at', type=str)
+        sort_direction = request.args.get('sort_direction', default='asc', type=str)
 
         offset = (page - 1) * page_size # example: page = 2, page_size = 50 -> offset = (2 - 1)*50 = 50 -> get records from 51 -> 100
         
@@ -525,7 +527,7 @@ def search(user_id, set_id):
 
         # Kiểm tra xem điều kiện search có keyword không, nếu có thì thêm vào cả filters và query_params
         if keyword:
-            filters.append("(b.content ILIKE %s OR c.content ILIKE %s)")
+            filters.append("(b.content ILIKE %s OR EXISTS (SELECT 1 FROM public.answer WHERE question_id = b.id AND content ILIKE %s))")
             query_params.append(f"%{keyword}%") # map vào %s đầu tiên trong (b.content ILIKE %s OR c.content ILIKE %s)
             query_params.append(f"%{keyword}%") # map vào %s thứ hai trong (b.content ILIKE %s OR c.content ILIKE %s)
         
@@ -534,10 +536,10 @@ def search(user_id, set_id):
             filters.append("b.type = %s")
             query_params.append(question_type)
         
-        sort_column = sql.Identifier(sort_by)
+        sort_column = sql.Identifier('b', sort_by)
         sort_order = sql.SQL('ASC') if sort_direction == 'asc' else sql.SQL('DESC')
 
-        query3 = sql.SQL('''SELECT a.description, b.content AS question_content, c.content AS answer_content, c.is_correct  
+        query3 = sql.SQL('''SELECT a.name, a.description, b.content AS question_content, c.content AS answer_content, c.is_correct  
                             FROM public.set a 
                             JOIN public.question b ON a.id = b.set_id
                             JOIN public.answer c ON b.id = c.question_id
@@ -548,6 +550,8 @@ def search(user_id, set_id):
             sort_column,
             sort_order
         )
+
+        print(query3)
 
         query_params.extend([page_size, offset])
 
@@ -561,8 +565,11 @@ def search(user_id, set_id):
         }
 
         if questions_answers:
+            # Get name's description
+            ret['data']['name'] = questions_answers[0][0]
+
             # Get set's description
-            ret['data']['description'] = questions_answers[0][0]
+            ret['data']['description'] = questions_answers[0][1]
 
             # Initialize list of question
             ret['data']['questions'] = []
@@ -573,14 +580,14 @@ def search(user_id, set_id):
 
             for idx, item in enumerate(questions_answers):
                 if question_content == '':
-                    question_content = item[1]
-                    answers_infors.append({'answer_content': item[2], 'is_correct': item[3]})
-                elif item[1] != question_content:
+                    question_content = item[2]
+                    answers_infors.append({'answer_content': item[3], 'is_correct': item[4]})
+                elif item[2] != question_content:
                     ret['data']['questions'].append({'question_content': question_content, 'answers': answers_infors})
-                    answers_infors = [{'answer_content': item[2], 'is_correct': item[3]}]
-                    question_content = item[1]
+                    answers_infors = [{'answer_content': item[3], 'is_correct': item[4]}]
+                    question_content = item[2]
                 else:
-                    answers_infors.append({'answer_content': item[2], 'is_correct': item[3]})
+                    answers_infors.append({'answer_content': item[3], 'is_correct': item[4]})
 
                 if idx == len(questions_answers) - 1:
                     ret['data']['questions'].append({'question_content': question_content, 'answers': answers_infors})
