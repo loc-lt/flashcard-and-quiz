@@ -173,6 +173,14 @@ def set_id_required(func):
     @wraps(func)
     def decorated_function(*args, **kwargs):
         try:
+            # Get set_id from request (required)
+            if 'set_id' not in request.json:
+                ret = {
+                        'status': False,
+                        'message':'SetID is required!'
+                    }
+                return jsonify(ret), HTTP_400_BAD_REQUEST
+            
             # Get set_id from request
             set_id = request.json['set_id']
 
@@ -184,6 +192,37 @@ def set_id_required(func):
                     }), HTTP_400_BAD_REQUEST
             
             return func(*args, **kwargs, set_id = set_id)
+        except Exception as e:
+            return jsonify({
+                'status': False, 
+                'message': str(e)
+                }), HTTP_500_INTERNAL_SERVER_ERROR
+    
+    return decorated_function
+
+def question_id_required(func):
+    @wraps(func)
+    def decorated_function(*args, **kwargs):
+        try:
+            # Get question_id from request (required)
+            if 'question_id' not in request.json:
+                ret = {
+                        'status': False,
+                        'message':'QuestionID is required!'
+                    }
+                return jsonify(ret), HTTP_400_BAD_REQUEST
+            
+            # Get set_id from request
+            question_id = request.json['question_id']
+
+            # Check if type of question_id is not uuid
+            if not question_id or not is_valid_uuid(question_id):
+                return jsonify({
+                    'status': False, 
+                    'message': 'Invalid or missing question_id!'
+                    }), HTTP_400_BAD_REQUEST
+            
+            return func(*args, **kwargs, question_id = question_id)
         except Exception as e:
             return jsonify({
                 'status': False, 
