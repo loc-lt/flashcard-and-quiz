@@ -13,7 +13,7 @@ parameters:
         - "set_id"
         - "content"
         - "description"
-        - "list_answers"
+        - "answers"
       properties:
         set_id:
           type: "set_id"
@@ -24,8 +24,8 @@ parameters:
         type:
           type: "type"
           example: "xxxxxx"
-        list_answers:
-          type: "list_answers"
+        answers:
+          type: "answers"
           example: [
             {
               "content": "yyyyyy",
