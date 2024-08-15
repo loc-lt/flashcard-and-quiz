@@ -1,4 +1,4 @@
-from constants.http_status_code import HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, HTTP_409_CONFLICT
+from constants.http_status_code import *
 from flask import *
 from flask import Blueprint, request, jsonify, current_app, session
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -11,13 +11,13 @@ from controller.auth_middleware import *
 import traceback
 import datetime
 
-from utils.validators import validate_email, validate_name, validate_integer, is_boolean, is_valid_uuid, is_valid_question_type, count_correct_answers
+from utils.validators import is_valid_uuid, is_valid_question_type
 from utils.database import get_db_connection 
 
-questions = Blueprint("questions", __name__, url_prefix="/api/v1/questions")
+questions = Blueprint("questions", __name__, url_prefix="/api/v1")
 
 # CREATE
-@questions.post("")
+@questions.post("/questions")
 @swag_from("../docs/questions/create.yaml")
 @user_token_required
 @set_id_required
@@ -26,27 +26,32 @@ def create_question(user_id, set_id):
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Get data from request
+        # Get content from request (required)
+        if 'content' not in request.json:
+            ret = {
+                    'status': False,
+                    'message':'Please fill out content field!'
+                }
+            return jsonify(ret), HTTP_400_BAD_REQUEST  
         content = request.json['content']
-        type = request.json['type']
-        list_answers = request.json['list_answers']
 
-        # Check if user_id or set_id is not uuid type
+        # Validate name
         if not is_valid_uuid(user_id) or not is_valid_uuid(set_id):
             ret = {
                     'status': False,
                     'message':'Type of user_id and set_id must is uuid!'
                 }
             return jsonify(ret), HTTP_400_BAD_REQUEST  
-        
-        # Check if the description is filled in or not
-        if not content:
+
+        # Get type from request (required)
+        if 'type' not in request.json:
             ret = {
                     'status': False,
-                    'message':'Please fill in content of question!'
+                    'message':'Please fill out type field!'
                 }
-            return jsonify(ret), HTTP_400_BAD_REQUEST
-        
+            return jsonify(ret), HTTP_400_BAD_REQUEST  
+        type = request.json['type']
+
         # Checks if type is one of three values: Text_Fill, Multiple_Choice, Checkboxes
         if not is_valid_question_type(type):
             ret = {
@@ -54,6 +59,15 @@ def create_question(user_id, set_id):
                     'message':'Invalid type of question!'
                 }
             return jsonify(ret), HTTP_400_BAD_REQUEST
+
+        # Get name from request (required)
+        if 'answers' not in request.json:
+            ret = {
+                    'status': False,
+                    'message':'Please fill out answer list!'
+                }
+            return jsonify(ret), HTTP_400_BAD_REQUEST  
+        list_answers = request.json['answers']
 
         # Validate question and answers
         validation_error = validate_question_and_answers(type, list_answers)
@@ -95,7 +109,7 @@ def create_question(user_id, set_id):
 
         # Create new questions
         query3 = sql.SQL('''insert into public.question (content, type, set_id, created_at, updated_at, is_deleted) 
-                        values (%s, %s, %s, %s, %s, %s) RETURNING id''')
+                        values (%s, %s, %s, %s, %s, %s) returning id;''')
         cursor.execute(query3, (content, type, set_id, datetime.datetime.now(), datetime.datetime.now(), False))
         question_id = cursor.fetchone()[0]
 
@@ -126,24 +140,15 @@ def create_question(user_id, set_id):
         if conn:
             conn.close()
 
-@questions.delete("/<string:question_id>")
+@questions.delete("/sets/<string:set_id>/questions/<string:question_id>")
 @swag_from("../docs/questions/delete.yaml")
 @user_token_required
-@set_id_required
 def delete_set(user_id, set_id, question_id):
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor() 
 
-        # Check if set_id or question_id is filled in or not
-        if not set_id or not question_id:
-            ret = {
-                    'status': False,
-                    'message':'Please fill in set_id and question_id!'
-                }
-            return jsonify(ret), HTTP_400_BAD_REQUEST 
-
-        # Check if set_id is uuid type or not
+        # Check if set_id and question_id is uuid type or not
         if not is_valid_uuid(set_id) or not is_valid_uuid(question_id):
             ret = {
                     'status': False,
@@ -156,6 +161,85 @@ def delete_set(user_id, set_id, question_id):
         cursor.execute(query1, (user_id, ))
         
         is_deleted = cursor.fetchone()
+        if not is_deleted:
+            ret = {
+                    'status': False,
+                    'message':'Set owner has been deleted!'
+                }
+            return jsonify(ret), HTTP_400_BAD_REQUEST
+        
+        # Check if user isn't owner of this set
+        query2 = sql.SQL('''select * from public.set where user_id = %s and id = %s''')
+        cursor.execute(query2, (user_id, set_id))
+
+        check_owner = cursor.fetchone()
+        if check_owner is not None and len(check_owner) == 0:
+            ret = {
+                    'status': False,
+                    'message':'Sorry, permission denied!'
+                }
+            return jsonify(ret), HTTP_403_FORBIDDEN
+        
+        # Check if set don't include question
+        query3 = sql.SQL('''select * from public.question where set_id = %s and id = %s''')
+        cursor.execute(query3, (set_id, question_id, ))
+
+        check_set_question = cursor.fetchone()
+        if check_set_question is None or len(check_set_question) == 0:
+            ret = {
+                    'status': False,
+                    'message':'Sorry, set do not include question!'
+                }
+            return jsonify(ret), HTTP_400_BAD_REQUEST
+
+        # Update question information
+        query4 = sql.SQL('''update public.question set is_deleted = %s where id = %s''')
+        
+        cursor.execute(query4, (True, question_id))
+        conn.commit()
+
+        # Return response
+        ret = {
+                'status': True,
+                'message':'Delete question successfully!'
+            }
+        
+        return jsonify(ret), HTTP_204_NO_CONTENT
+    except Exception as e:
+        ret = {
+            'status': False,
+            'message': str(e)
+        }
+        Systemp_log(traceback.format_exc(), "delete_question").append_new_line()
+        return jsonify(ret), HTTP_500_INTERNAL_SERVER_ERROR
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+@questions.put("/sets/<string:set_id>/questions/<string:question_id>")
+@swag_from("../docs/questions/update.yaml")
+@user_token_required
+def update_question(user_id, set_id, question_id):
+    try:
+        # Create connection
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Check if set_id and question_id is uuid type or not
+        if not is_valid_uuid(set_id) or not is_valid_uuid(question_id):
+            ret = {
+                    'status': False,
+                    'message':'Type of set_id and question_id must is uuid!'
+                }
+            return jsonify(ret), HTTP_400_BAD_REQUEST  
+
+        # Check if user is deleted
+        query1 = sql.SQL('''select is_deleted from public."user" where id = %s''')
+        cursor.execute(query1, (user_id, ))
+        is_deleted = cursor.fetchone()
+
         if not is_deleted:
             ret = {
                     'status': False,
@@ -175,67 +259,15 @@ def delete_set(user_id, set_id, question_id):
                 }
             return jsonify(ret), HTTP_403_FORBIDDEN
         
-        # Update question information
-        query3 = sql.SQL('''update public.question set is_deleted = %s where id = %s''')
-        
-        cursor.execute(query3, (True, question_id))
-        conn.commit()
+        # Check if set don't include question
+        query3 = sql.SQL('''select * from public.question where set_id = %s and id = %s''')
+        cursor.execute(query3, (set_id, question_id, ))
 
-        # Return response
-        ret = {
-                'status': True,
-                'message':'Delete question successfully!'
-            }
-        
-        return jsonify(ret), HTTP_200_OK
-    except Exception as e:
-        ret = {
-            'status': False,
-            'message': str(e)
-        }
-        Systemp_log(traceback.format_exc(), "delete_question").append_new_line()
-        return jsonify(ret), HTTP_500_INTERNAL_SERVER_ERROR
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-
-@questions.put("/<question_id>")
-@swag_from("../docs/questions/update.yaml")
-@user_token_required
-@set_id_required
-def update_question(user_id, set_id, question_id):
-    try:
-        # Create connection
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        # Check if set_id or question_id is filled in or not
-        if not set_id or not question_id:
+        check_set_question = cursor.fetchone()
+        if check_set_question is None or len(check_set_question) == 0:
             ret = {
                     'status': False,
-                    'message':'Please fill in set_id and question_id!'
-                }
-            return jsonify(ret), HTTP_400_BAD_REQUEST 
-
-        # Check if set_id is uuid type or not
-        if not is_valid_uuid(set_id) or not is_valid_uuid(question_id):
-            ret = {
-                    'status': False,
-                    'message':'Type of set_id and question_id must is uuid!'
-                }
-            return jsonify(ret), HTTP_400_BAD_REQUEST  
-
-        # Check if user is deleted
-        query1 = sql.SQL('''select is_deleted from public."user" where id = %s''')
-        cursor.execute(query1, (user_id, ))
-        is_deleted = cursor.fetchone()
-
-        if not is_deleted:
-            ret = {
-                    'status': False,
-                    'message':'Owner of set has been deleted!'
+                    'message':'Sorry, set do not include question!'
                 }
             return jsonify(ret), HTTP_400_BAD_REQUEST
 
@@ -251,7 +283,10 @@ def update_question(user_id, set_id, question_id):
         validation_error = validate_question_and_answers(question_type, all_answers)
         if validation_error:
             message, status_code = validation_error
-            return jsonify({'status': False, 'message': message}), status_code
+            return jsonify({
+                'status': False, 
+                'message': message
+            }), status_code
 
         # Start transaction
         cursor.execute('BEGIN')
@@ -291,7 +326,6 @@ def update_question(user_id, set_id, question_id):
 
         # Return response
         return jsonify({'status': True, 'message': 'Update question successfully!'}), HTTP_200_OK
-
     except Exception as e:
         if conn:
             # Rollback if update failed
@@ -304,11 +338,11 @@ def update_question(user_id, set_id, question_id):
             conn.close()
 
 # READ
-@questions.get("/<string:question_id>")
+@questions.get("questions/<string:question_id>")
 @swag_from("../docs/questions/all_answers.yaml")
 @user_token_required
 @set_id_required
-def get_all_questions_of_set(user_id, set_id, question_id):
+def get_all_questions_of_set(user_id, question_id):
     try:
         # Create connection
         conn = get_db_connection()
@@ -354,17 +388,23 @@ def get_all_questions_of_set(user_id, set_id, question_id):
             }
             return jsonify(ret), HTTP_400_BAD_REQUEST
         
-        # Check if user isn't owner of this question
-        query2 = sql.SQL('''select * from public.question where set_id = %s and id = %s''')
-        cursor.execute(query2, (set_id, question_id))
+        # Check if user isn't owner of questions
+        query2 = sql.SQL('''select * 
+                         from public."user" a
+                         join public.set b
+                         on a.id = b.user_id and a.id = %s
+                         join public.question c
+                         on b.id = c.set_id and c.id = %s''')
+        cursor.execute(query2, (user_id, question_id, ))
 
-        check_owner = cursor.fetchone()
-        if check_owner is not None and len(check_owner) == 0:
+        check_question_user = cursor.fetchone()
+        
+        if check_question_user is None or len(check_question_user) == 0:
             ret = {
                     'status': False,
                     'message':'Sorry, permission denied!'
                 }
-            return jsonify(ret), HTTP_403_FORBIDDEN
+            return jsonify(ret), HTTP_400_BAD_REQUEST
         
         ret = {
                 'status': True,
