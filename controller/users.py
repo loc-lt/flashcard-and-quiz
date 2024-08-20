@@ -73,7 +73,7 @@ def add_user(email, password, name, role):
         if conn:
             conn.close()
     
-# CREATE -> if create a user has already deleted?
+# CREATE
 @users.post("/register")
 @swag_from("../docs/users/create.yaml")
 def create_user():
