@@ -2,6 +2,7 @@ import re
 import validators
 import uuid
 from constants.http_status_code import *
+from utils.database import *
 
 def validate_email(email):
     """Kiểm tra tính hợp lệ của địa chỉ email."""
@@ -65,3 +66,56 @@ def validate_question_and_answers(question_type, list_answers):
         elif count_correct_answers(list_answers) < 2:
             return 'Checkboxes question must have more than one correct answer!', HTTP_400_BAD_REQUEST
     return None
+
+def is_correct_answer(quiz_question_id, solutions):
+    try:
+        # Create connection
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get all answer of question
+        cursor.execute('''select answer_id, content 
+                    from public.quiz_question_answer 
+                    where quiz_question_id = %s''',
+                        (quiz_question_id, ))
+        
+        all_answers = cursor.fetchall()
+        
+        # Get all true answer of question
+        cursor.execute('''select answer_id, content 
+                    from public.quiz_question_answer 
+                    where quiz_question_id = %s and is_correct = %s''',
+                        (quiz_question_id, True, ))
+        
+        true_answers = cursor.fetchall()
+
+        if len(all_answers) == 1 and len(true_answers) == 1: # TEXT_FILL
+            text_answer = true_answers[0][1]
+
+            if text_answer == solutions['text_answer']:
+                return True
+            
+            return False
+        elif len(all_answers) > 1 and len(true_answers) == 1: # MULTIPLE_CHOICE
+            true_answer_id = true_answers[0][0]
+
+            if true_answer_id == solutions['multiple_choice_answer']:
+                return True
+            
+            return False
+        elif len(all_answers) > 2 and len(true_answers) > 2:
+            list_true_answer_ids = [item[0] for item in true_answers]
+
+            if set(list_true_answer_ids) == set(solutions['checkboxes_answer']):
+                return True
+            
+            return False
+        else:
+            return False
+    except:
+        return False
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()

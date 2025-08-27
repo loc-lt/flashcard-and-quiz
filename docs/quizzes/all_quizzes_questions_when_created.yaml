@@ -1,0 +1,10 @@
+get_all_when_created
+---
+tags:
+  - quizzes
+responses:
+  200:
+    description: Redirects to the original link
+
+  400:
+    description: not found

@@ -3,6 +3,9 @@ update
 tags:
   - sets
 parameters:
+  - in: path
+    name: set_id
+    required: true
   - name: body
     description: The body should contain the insert data
     in: body
@@ -10,11 +13,11 @@ parameters:
     schema:
       type: object
       required:
-        - "set_id"
+        - "name"
         - "description"
       properties:
-        set_id:
-          type: "set_id"
+        name:
+          type: "name"
           example: 'xxxxxx'
         description:
           type: "description"

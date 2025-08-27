@@ -276,7 +276,7 @@ def update_question(user_id, set_id, question_id):
         question_type = request.json['type']
         list_answers_to_delete = request.json['delete_answers']
         list_answers_to_add = request.json['add_answers']
-        list_answers_to_update = request.json['update_answers']
+        list_answers_to_update = request.json['update_answers'] 
 
         # Validate question and answers
         all_answers = list_answers_to_add + list_answers_to_update
@@ -427,8 +427,7 @@ def get_all_questions_of_set(user_id, question_id):
         ret['data']['answers'] = []
 
         # Get all answers
-        for item in questions_answers:
-            ret['data']['answers'].append({'answer_content': item[1], 'is_correct': item[2]})
+                                                                                                                                                            
 
         return jsonify(ret), HTTP_200_OK
     except Exception as e:

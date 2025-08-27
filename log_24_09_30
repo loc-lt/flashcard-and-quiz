@@ -1,0 +1,28 @@
+-------------------Log----------------24/09/30-11:20:35
+Traceback (most recent call last):
+  File "c:\Users\Loc\Desktop\new\flashcard_quiz\controller\users.py", line 57, in add_user
+    cursor = conn.cursor()
+             ^^^^^^^^^^^
+AttributeError: 'function' object has no attribute 'cursor'
+ ---- add_user
+-------------------Log----------------24/09/30-15:18:21
+Traceback (most recent call last):
+  File "c:\Users\Loc\Desktop\new\flashcard_quiz\controller\users.py", line 220, in login
+    email = request.json["email"]
+            ~~~~~~~~~~~~^^^^^^^^^
+KeyError: 'email'
+ ---- login
+-------------------Log----------------24/09/30-15:19:46
+Traceback (most recent call last):
+  File "c:\Users\Loc\Desktop\new\flashcard_quiz\controller\users.py", line 220, in login
+    email = request.json["email"]
+            ~~~~~~~~~~~~^^^^^^^^^
+KeyError: 'email'
+ ---- login
+-------------------Log----------------24/09/30-15:19:54
+Traceback (most recent call last):
+  File "c:\Users\Loc\Desktop\new\flashcard_quiz\controller\users.py", line 220, in login
+    email = request.json["email"]
+            ~~~~~~~~~~~~^^^^^^^^^
+KeyError: 'email'
+ ---- login

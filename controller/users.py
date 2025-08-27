@@ -53,7 +53,7 @@ def add_user(email, password, name, role):
 
     try:
         # Create connection
-        conn = get_db_connection
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         # Insert user information to table "user" 

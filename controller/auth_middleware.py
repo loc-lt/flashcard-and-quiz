@@ -2,7 +2,7 @@ import jwt
 from functools import wraps
 from flask import request
 from flask.json import jsonify
-from flask import current_app 
+from flask import current_app
 from fakeredis import FakeStrictRedis
 from constants.http_status_code import *
 from psycopg2 import sql
@@ -15,6 +15,7 @@ from utils.validators import *
 # Connect to redis server
 redis_client = FakeStrictRedis()
 
+# Middle to check token (exist or not, expiration)
 def token_required(func):
     @wraps(func)
     def decorated(*args, **kwargs):
@@ -22,7 +23,7 @@ def token_required(func):
         token = None
         if "Authorization" in request.headers:
             token = request.headers["Authorization"].split(" ")[1]
-        
+
         # Check whether token exist or not
         if not token:
             ret = {
@@ -46,12 +47,12 @@ def token_required(func):
                 'message': 'Sorry, token not exist!',
                 'error': e
             }
-            return jsonify(ret), HTTP_401_UNAUTHORIZED 
+            return jsonify(ret), HTTP_401_UNAUTHORIZED
 
         # Print payload after decode to test
         print(payload)
-        
-        # Check whether payload after decode is none or not 
+
+        # Check whether payload after decode is none or not
         if payload is not None:
             if datetime.datetime.now().timestamp() <= payload['expiration']:
                 # Return func with input data
@@ -64,7 +65,7 @@ def token_required(func):
                 return jsonify(ret), HTTP_401_UNAUTHORIZED
             else:
                 keys = redis_client.keys('*')
-            
+
                 # Get value for each key
                 data = {}
 
@@ -83,7 +84,7 @@ def token_required(func):
                 'message':'Sorry, invalid token!'
             }
             return jsonify(ret), HTTP_401_UNAUTHORIZED
-        
+
     return decorated
 
 def user_token_required(func):
@@ -93,7 +94,7 @@ def user_token_required(func):
         token = None
         if "Authorization" in request.headers:
             token = request.headers["Authorization"].split(" ")[1]
-        
+
         # Check whether token exist or not
         if not token:
             ret = {
@@ -117,12 +118,12 @@ def user_token_required(func):
                 'message': 'Sorry, token not exist!',
                 'error': e
             }
-            return jsonify(ret), HTTP_401_UNAUTHORIZED 
+            return jsonify(ret), HTTP_401_UNAUTHORIZED
 
         # Print payload after decode to test
         print(payload)
-        
-        # Check whether payload after decode is none or not 
+
+        # Check whether payload after decode is none or not
         if payload is not None:
             if datetime.datetime.now().timestamp() <= payload['expiration']:
                 # Thêm user_id để trả về cho hàm
@@ -131,7 +132,7 @@ def user_token_required(func):
 
                 query = sql.SQL('''select id from public."user" where email = %s''')
                 cursor.execute(query, (payload['email'], ))
-                
+
                 user_id = cursor.fetchone()
 
                 cursor.close()
@@ -147,7 +148,7 @@ def user_token_required(func):
                 return jsonify(ret), HTTP_401_UNAUTHORIZED
             else:
                 keys = redis_client.keys('*')
-            
+
                 # Get value for each key
                 data = {}
 
@@ -166,7 +167,7 @@ def user_token_required(func):
                 'message':'Sorry, invalid token!'
             }
             return jsonify(ret), HTTP_401_UNAUTHORIZED
-        
+
     return decorated
 
 def set_id_required(func):
@@ -180,24 +181,24 @@ def set_id_required(func):
                         'message':'SetID is required!'
                     }
                 return jsonify(ret), HTTP_400_BAD_REQUEST
-            
+
             # Get set_id from request
             set_id = request.json['set_id']
 
             # Check if type of set_id is not uuid
             if not set_id or not is_valid_uuid(set_id):
                 return jsonify({
-                    'status': False, 
+                    'status': False,
                     'message': 'Invalid or missing set_id!'
                     }), HTTP_400_BAD_REQUEST
-            
+
             return func(*args, **kwargs, set_id = set_id)
         except Exception as e:
             return jsonify({
-                'status': False, 
+                'status': False,
                 'message': str(e)
                 }), HTTP_500_INTERNAL_SERVER_ERROR
-    
+
     return decorated_function
 
 def question_id_required(func):
@@ -211,22 +212,53 @@ def question_id_required(func):
                         'message':'QuestionID is required!'
                     }
                 return jsonify(ret), HTTP_400_BAD_REQUEST
-            
+
             # Get set_id from request
             question_id = request.json['question_id']
 
             # Check if type of question_id is not uuid
             if not question_id or not is_valid_uuid(question_id):
                 return jsonify({
-                    'status': False, 
+                    'status': False,
                     'message': 'Invalid or missing question_id!'
                     }), HTTP_400_BAD_REQUEST
-            
+
             return func(*args, **kwargs, question_id = question_id)
         except Exception as e:
             return jsonify({
-                'status': False, 
+                'status': False,
                 'message': str(e)
                 }), HTTP_500_INTERNAL_SERVER_ERROR
-    
+
+    return decorated_function
+
+def quiz_id_required(func):
+    @wraps(func)
+    def decorated_function(*args, **kwargs):
+        try:
+            # Get quiz_id from request (required)
+            if 'quiz_id' not in request.json:
+                ret = {
+                        'status': False,
+                        'message':'QuizID is required!'
+                    }
+                return jsonify(ret), HTTP_400_BAD_REQUEST
+
+            # Get quiz_id from request
+            quiz_id = request.json['quiz_id']
+
+            # Check if type of set_id is not uuid
+            if not quiz_id or not is_valid_uuid(quiz_id):
+                return jsonify({
+                    'status': False,
+                    'message': 'Invalid or missing quiz_id!'
+                    }), HTTP_400_BAD_REQUEST
+
+            return func(*args, **kwargs, set_id = quiz_id)
+        except Exception as e:
+            return jsonify({
+                'status': False,
+                'message': str(e)
+                }), HTTP_500_INTERNAL_SERVER_ERROR
+
     return decorated_function

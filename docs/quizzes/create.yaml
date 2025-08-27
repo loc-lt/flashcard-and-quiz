@@ -1,7 +1,7 @@
 create
 ---
 tags:
-  - answers
+  - quizzes
 parameters:
   - name: body
     description: The body should contain the insert data
@@ -10,15 +10,19 @@ parameters:
     schema:
       type: object
       required:
-        - "content"
-        - "is_correct"
+        - "set_id"
+        - "quantities"
+        - "types"
       properties:
-        content:
-          type: "content"
+        set_id:
+          type: "set_id"
           example: "xxxxxx"
-        is_correct:
-          type: "is_correct"
-          example: "xxxxxx"
+        quantities:
+          type: "quantities"
+          example: ["x", "y", "z", "t"]
+        types:
+          type: "types"
+          example: ["xxxxxx", "yyyyyy", "zzzzzz", "tttttt"]
 responses:
   201:
     description: When a data insert success
